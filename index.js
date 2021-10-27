@@ -132,6 +132,18 @@ let root = {
     // otherwise, splice out that entry from the restaurants array
     restaurants.splice(index, 1);
     return true;
+  },
+  // 'editRestaurant' mutation merges new data into an existing restaurant
+  editRestaurant: ({id, input}) => {
+    // find existing restaurant by ID
+    let restaurant = restaurants.find((restaurant) => restaurant.id === id);
+    
+    // error if not in the data
+    if (!restaurant)
+      throw new Error("Restaurant does not exist");
+    
+    // merge properties, this is a shallow copy only
+    return Object.assign(restaurant, input);
   }
 };
 
