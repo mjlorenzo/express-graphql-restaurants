@@ -5,7 +5,7 @@ const express = require('express');
 // our predefined seed database
 const restaurants = [
   {
-    "id": 0,
+    "id": 1,
     "name": "WoodsHill ",
     "description": "American cuisine, farm to table, with fresh produce every day",
     "dishes": [
@@ -20,7 +20,7 @@ const restaurants = [
     ]
   },
   {
-    "id": 1,
+    "id": 2,
     "name": "Fiorellas",
     "description": "Italian-American home cooked food with fresh pasta and sauces",
     "dishes": [
@@ -39,7 +39,7 @@ const restaurants = [
     ]
   },
   {
-    "id": 2,
+    "id": 3,
     "name": "Karma",
     "description": "Malaysian-Chinese-Japanese fusion, with great bar and bartenders",
     "dishes": [
@@ -75,6 +75,9 @@ type Dish {
   name: String,
   price: Float
 },
+type DeleteResponse {
+  ok: Boolean
+},
 input DishInput {
   name: String,
   price: Float
@@ -85,7 +88,9 @@ input RestaurantInput {
   dishes: [DishInput]
 },
 type Mutation {
-  setRestaurant(input: RestaurantInput) : Restaurant
+  setRestaurant(input: RestaurantInput): Restaurant,
+  deleteRestaurant(id: Int): DeleteResponse
+  editRestaurant(id: Int, input: RestaurantInput): Restaurant
 }
 `);
 
@@ -95,18 +100,38 @@ let root = {
   restaurants: () => restaurants,
   // 'restaurant' query singles out a specific id
   restaurant: ({id}) => {
-    console.log(id);
+    // search for the restaurant
     let restaurant = restaurants.find((restaurant) => restaurant.id === id);
+    // if not found, throw an Error
     if (!restaurant)
       throw new Error("Restaurant does not exist");
     
+    // otherwise send it back
     return restaurant;
   },
   // 'setRestaurant' mutation adds a new restaurant
   setRestaurant: ({input}) => {
-    let newRestaurant = { id: restaurants.length, ...input };
+    // create a new ID which either increments the last ID by 1 or becomes 1 itself
+    let newId = (restaurants[restaurants.length - 1].id || 0) + 1;
+    // create a new restaurant object with the new ID and input from the mutation
+    let newRestaurant = { id: newId, ...input };
+    // push it into the restaurant array
     restaurants.push(newRestaurant);
+    // return the object
     return newRestaurant;
+  },
+  // 'deleteRestaurant' mutation deletes a restaurant
+  deleteRestaurant: ({id}) => {
+    // find the index of the restaurant
+    let index = restaurants.findIndex((restaurant) => restaurant.id === id);
+    // if it doesn't exist
+    if (index < 0)
+      // throw an error saying it doesn't exist
+      throw new Error("Restaurant does not exist");
+    
+    // otherwise, splice out that entry from the restaurants array
+    restaurants.splice(index, 1);
+    return true;
   }
 };
 
